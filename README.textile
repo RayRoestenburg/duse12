@@ -1,3 +1,6 @@
 h1. DUSE XII workshop
 
 Akka Workshop project for the DUSE XII meetup.
+
+The start folder contains a starting point sbt project for the workshop.
+The finish folder contains a finished solution.
