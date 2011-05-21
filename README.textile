@@ -1,0 +1,3 @@
+h1. DUSE XII workshop
+
+Akka Workshop project for the DUSE XII meetup.
