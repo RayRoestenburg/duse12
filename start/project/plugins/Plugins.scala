@@ -9,4 +9,5 @@ class Plugins(info: ProjectInfo) extends PluginDefinition(info) {
   val sbtIdea = "com.github.mpeltonen" % "sbt-idea-plugin" % "0.4.0"
   val bumRepo = "Bum Networks Release Repository" at "http://repo.bumnetworks.com/releases"
   val sbtAkkaBivy = "net.evilmonkeylabs" % "sbt-akka-bivy" % "0.2.0"
+  val formatter = "com.github.olim7t" % "sbt-scalariform" % "1.0.3"
 }
