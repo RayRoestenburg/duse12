@@ -7,7 +7,7 @@ import java.util.Timer
 /**
  *
  */
-class Junction extends Actor{
+class Junction extends Actor {
   def receive = {
     case msg: VehicleQueued => {
       // process queued vehicles,

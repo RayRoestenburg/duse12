@@ -1,12 +1,12 @@
 package duse12
 
 import java.util.Date
-import akka.actor.{ActorRef, Actor}
+import akka.actor.{ ActorRef, Actor }
 
 /**
  *
  */
-class Sensor(lane:Int, junction: ActorRef) extends Actor {
+class Sensor(lane: Int, junction: ActorRef) extends Actor {
   def receive = {
     case msg: VehicleDetected => {
       // remote actor receives VehicleDetected
@@ -16,4 +16,4 @@ class Sensor(lane:Int, junction: ActorRef) extends Actor {
   }
 }
 case class VehicleDetected(timestamp: Date)
-case class VehicleQueued(lane:Int, timestamp: Date)
+case class VehicleQueued(lane: Int, timestamp: Date)
