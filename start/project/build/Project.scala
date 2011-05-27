@@ -8,6 +8,7 @@ with Eclipsify with IdeaProject with AkkaKernelProject with ScalariformPlugin {
  val akkaRemote = akkaModule("remote")
  val akkaHttp = akkaModule("http")
  val akkaCamel = akkaModule("camel")
+ val akkaTestKit = akkaModule("testkit")
  lazy val logback = "ch.qos.logback" % "logback-classic" % "0.9.28" % "runtime"
  // for ui
  val swing = "org.scala-lang" % "scala-swing" % this.buildScalaVersion % "compile"
