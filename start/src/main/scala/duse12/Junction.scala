@@ -1,13 +1,11 @@
 package duse12
 
-import akka.actor.Actor
-import akka.actor.Actor._
-import java.util.Timer
+import akka.actor.{ ActorRef, Actor }
 
 /**
- *
+ * The junction of roads, receives vehicles and communicates with TrafficLights
  */
-class Junction extends Actor {
+class Junction(trafficLights: List[ActorRef]) extends Actor {
   def receive = {
     case msg: VehicleQueued => {
       // process queued vehicles,

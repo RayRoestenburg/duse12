@@ -3,13 +3,12 @@ package duse12
 import akka.actor.Actor
 
 /**
- * Handle forwarded commands and queries
+ * A TrafficLight, receives switch messages
  */
-class JunctionQueries extends Actor {
+class TrafficLight extends Actor {
   def receive = {
     case _ => {
 
     }
   }
-
 }
