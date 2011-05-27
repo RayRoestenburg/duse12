@@ -9,3 +9,4 @@ lib
 *~
 *.orig
 out
+.scala_dependencies
