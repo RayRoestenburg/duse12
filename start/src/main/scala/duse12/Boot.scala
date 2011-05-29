@@ -15,8 +15,8 @@ class Boot {
   val commands = actorOf(new JunctionCommands()).start
   val junction = actorOf(new Junction(trafficLights = List(left,right,top,bottom),listener = commands)).start
   val sensor = actorOf(new Sensor(Lane.Left,junction)).start
-  Actor.remote.register(sensor)
-  Actor.remote.start
+  remote.register(sensor)
+  remote.start
   //TODO register JunctionCommands and Queries as remote actors and call these from swing app.
   //
 }
