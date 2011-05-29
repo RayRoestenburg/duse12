@@ -77,7 +77,7 @@ class SensorButton(lane:HEADING, x: Int, y: Int, sensor:Sensor) extends Button {
   override def bounds = new Rectangle(x, y, width, height)
 
   action = Action(createText("0")) {
-   //TODO: call sensor actor with queue message
+   //TODO: call sensor actor with VehicleDetected message
     sensor.increment
     refresh
   }
@@ -154,7 +154,7 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
           if (sensor.current <= 0) {
             (e.getSource.asInstanceOf[Timer]).stop
           } else {
-            //TODO: call sensor actor with dequeue message
+            //TODO: call sensor actor with VehiclePassed message
             sensor.decrement
           }
         })
@@ -174,6 +174,7 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
   /**
    * Switches trafficlight to red in
    * an asynchronous fashion
+   * TODO: the TrafficLightActor needs to call this method when a switch to red command [ChangeTrafficLightColor(Red)] is sent
    */
   def switchToRed: Unit = {
        new javax.swing.SwingWorker[Unit, AnyRef] {
@@ -196,6 +197,7 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
    * vehicles by calling the sensor decrement method
    * in intervals of 300 ms (default). When switched to red
    * the dequeuing is stopped.
+   * TODO: the TrafficLightActor needs to call this method when a switch to green command [ChangeTrafficLightColor(Green)] is sent
    */
   def switchToGreen: Unit = {
      lock synchronized {
