@@ -12,7 +12,7 @@ import java.util.Date
  * The junction of roads, receives vehicles and communicates with TrafficLights
  */
 class Junction(trafficLights: List[ActorRef], listener:ActorRef) extends Actor {
-  val map = new HashMap[Lane.Side, Int]
+  val map = new HashMap[LANE.HEADING, Int]
 
   def receive = {
     case msg: VehicleQueued => {

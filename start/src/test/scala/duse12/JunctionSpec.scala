@@ -11,12 +11,12 @@ import akka.actor.Actor._
  *
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
-  val lightLeft = actorOf(new TrafficLight(Lane.Left)).start
-  val lightTop = actorOf(new TrafficLight(Lane.Top)).start
-  val lightRight = actorOf(new TrafficLight(Lane.Right)).start
-  val lightBottom = actorOf(new TrafficLight(Lane.Bottom)).start
+  val lightWest = actorOf(new TrafficLight(LANE.WEST)).start
+  val lightNorth = actorOf(new TrafficLight(LANE.NORTH)).start
+  val lightEast = actorOf(new TrafficLight(LANE.EAST)).start
+  val lightSouth = actorOf(new TrafficLight(LANE.SOUTH)).start
   val queries = actorOf(new JunctionQueries()).start
-  val lights = List(lightLeft,lightTop, lightRight, lightBottom)
+  val lights = List(lightWest,lightNorth, lightEast, lightSouth)
   val commands = actorOf(new JunctionCommands()).start
   val junction = actorOf(new Junction(trafficLights = lights, listener = testActor)).start
 
@@ -32,7 +32,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
   "The Junction" should {
     "forward VehicleQueued messages to the listener " in {
       within(500 millis) {
-        val msg = VehicleQueued(1,Lane.Left,new Date(System.currentTimeMillis()))
+        val msg = VehicleQueued(1,LANE.WEST,new Date(System.currentTimeMillis()))
         junction ! msg
         expectMsg(msg)
       }
@@ -41,7 +41,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
       within(500 millis) {
         val msg = ControlTraffic()
         junction ! msg
-        expectMsg(JunctionDecision(Lane.Left))
+        expectMsg(JunctionDecision(LANE.WEST))
       }
     }
   }
