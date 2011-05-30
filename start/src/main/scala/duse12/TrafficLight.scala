@@ -16,7 +16,7 @@ class TrafficLight(lane: LANE.HEADING, lightSwitch: LightSwitch) extends Actor {
     case msg: GreenLight => {
       def switch(switchToGreen: Boolean, currentState: Boolean): Boolean = {
         if (switchToGreen != currentState) {
-          EventHandler.info(this, "TrafficLight on %s lane is switched to red" format (lane))
+          EventHandler.info(this, "TrafficLight on '%s' lane is switched to red" format (lane))
           if (switchToGreen) {
             lightSwitch.switchToGreen
           } else {
@@ -35,7 +35,7 @@ class TrafficLight(lane: LANE.HEADING, lightSwitch: LightSwitch) extends Actor {
       }
     }
     case msg@_ => {
-      EventHandler.error(this, "Unknown msg '%s'received in Sensor." format msg)
+      EventHandler.error(this, "Unknown msg '%s' received in TrafficLight." format msg)
     }
   }
 }
