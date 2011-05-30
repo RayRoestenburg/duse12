@@ -50,7 +50,10 @@ object JunctionGUIAssembler {
     val northActor = actorOf(new TrafficLight(LANE.NORTH,north))
     val eastActor =actorOf(new TrafficLight(LANE.EAST,east))
     //val southActor =actorOf(new TrafficLight(LANE.SOUTH,south))
-    remote.start("localhost",2553)
+    //remote.start("localhost",2553)
+    //The application must be run with -Dakka.config=akka-gui.conf in order
+    //for akka to read the configuration for the gui
+    remote.start()
     remote.register("trafficLight-West",westActor.start)
     remote.register("trafficLight-North",northActor.start)
     remote.register("trafficLight-East",eastActor.start)

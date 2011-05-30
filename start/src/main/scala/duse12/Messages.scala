@@ -1,11 +1,14 @@
-package duse12
+package duse12 {
 
 import java.util.Date
 import akka.util.Duration
 
-package object messages {
-  def newDate = new Date(System.currentTimeMillis())
+package messages {
 
+  object MsgUtils {
+    def newDate = new Date(System.currentTimeMillis())
+  }
+  import MsgUtils._
   /**
    * message sent to the sensor that a vehicle is detected,
    * crossedMarker indicates if the vehicle crossed the marker on the road (passed the sensor)
@@ -86,4 +89,5 @@ package object messages {
    */
   case class SensorData(lane: LANE.HEADING, countDetected: Int)
 */
+}
 }
