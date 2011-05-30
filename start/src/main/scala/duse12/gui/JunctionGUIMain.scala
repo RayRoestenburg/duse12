@@ -35,16 +35,16 @@ object JunctionGUIAssembler {
     val northSens = remote.actorFor("sensor-North", "localhost", 2552)
 
     //WIDGETS
-    val north = TrafficLightWidget(northLane, 570, 280, northSens)
     var northSensBtn = new SensorButton(northLane, 375, 530, northSens)
+    val north = TrafficLightWidget(northLane, 570, 280, northSensBtn)
     WidgetRegistry.registry += (northLane -> (north, northSensBtn))
 
-    val east = TrafficLightWidget(eastLane, 120, 280, eastSens)
     var eastSensBtn = new SensorButton(eastLane, 20, 105, eastSens)
+    val east = TrafficLightWidget(eastLane, 120, 280, eastSensBtn)
     WidgetRegistry.registry += (eastLane -> (east, eastSensBtn))
 
-    var west = TrafficLightWidget(westLane, 570, 40, westSens)
     var westSensBtn = new SensorButton(westLane, 840, 105, westSens)
+    var west = TrafficLightWidget(westLane, 570, 40, westSensBtn)
     WidgetRegistry.registry += (westLane -> (west, westSensBtn))
 
     val westActor = actorOf(new TrafficLight(LANE.WEST,west))
