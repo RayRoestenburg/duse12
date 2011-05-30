@@ -22,13 +22,11 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
   val lightEast = actorOf(new TrafficLight(LANE.EAST, statusEast)).start
   val queries = actorOf(new JunctionQueries()).start
   val lights = List(lightWest, lightNorth, lightEast)
-  val commands = actorOf(new JunctionCommands()).start
   val junction = actorOf(new Junction(trafficLights = lights, listener = testActor)).start
 
   override protected def afterAll(): scala.Unit = {
     junction.stop
     lights.foreach(_.stop)
-    commands.stop
     queries.stop
     stopTestActor
   }

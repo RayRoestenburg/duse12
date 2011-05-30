@@ -9,23 +9,27 @@ package messages {
     def newDate = new Date(System.currentTimeMillis())
   }
   import MsgUtils._
+
+  trait JunctionEvent {
+
+  }
   /**
    * message sent to the sensor that a vehicle is detected,
    * crossedMarker indicates if the vehicle crossed the marker on the road (passed the sensor)
    * or if it is approaching the junction
    */
-  case class VehicleDetected(id: Int, crossedMarker: Boolean = false, timestamp: Date = newDate)
+  case class VehicleDetected(id: Int, crossedMarker: Boolean = false, timestamp: Date = newDate) extends JunctionEvent
 
   /**
    * message sent from sensor to junction, that a vehicle is queued on the lane
    * and that should be sent to the TrafficLight (for display purposes).
    */
-  case class VehicleQueued(id: Int, lane: LANE.HEADING, timestamp: Date = newDate)
+  case class VehicleQueued(id: Int, lane: LANE.HEADING, timestamp: Date = newDate) extends JunctionEvent
 
   /**
    * message sent from the sensor to the junction that a vehicle has passed the traffic light
    */
-  case class VehiclePassed(id: Int, lane: LANE.HEADING, timestamp: Date = newDate)
+  case class VehiclePassed(id: Int, lane: LANE.HEADING, timestamp: Date = newDate) extends JunctionEvent
 
   /**
    * Command to switch a traffic light on a lane to green.
@@ -41,12 +45,16 @@ package messages {
   /**
    * Resets the Junction
    */
-  case class ResetJunction()
+  case class ResetJunction() extends JunctionEvent
 
   /**
    * The decision the junction has made at a specific time, result of ControlTraffic command.
    */
-  case class JunctionDecision(lane: LANE.HEADING)
+  case class JunctionDecision(lane: LANE.HEADING) extends JunctionEvent
+
+
+  case class DecisionsRequest()
+  case class DecisionsResponse(history:List[JunctionDecision])
 
 /* TODO implement these in queries and commands
   /**
