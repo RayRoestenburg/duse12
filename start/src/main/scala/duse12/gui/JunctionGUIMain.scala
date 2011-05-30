@@ -29,11 +29,9 @@ object JunctionGUIAssembler {
     val eastLane = LANE.EAST
     val westLane = LANE.WEST
 
-    //TODO Urs, also add a south lane
     val westSens = remote.actorFor("sensor-West", "localhost", 2552)
     val eastSens = remote.actorFor("sensor-East", "localhost", 2552)
     val northSens = remote.actorFor("sensor-North", "localhost", 2552)
-    //val south = remote.actorFor("trafficLight-Bottom", "localhost", 2553)
     val north = TrafficLightWidget(northLane, 570, 280, northSens)
     var northSensBtn = new SensorButton(northLane, 375, 530, northSens)
     WidgetRegistry.registry += (northLane -> (north, northSensBtn))
@@ -49,15 +47,12 @@ object JunctionGUIAssembler {
     val westActor = actorOf(new TrafficLight(LANE.WEST,west))
     val northActor = actorOf(new TrafficLight(LANE.NORTH,north))
     val eastActor =actorOf(new TrafficLight(LANE.EAST,east))
-    //val southActor =actorOf(new TrafficLight(LANE.SOUTH,south))
-    //remote.start("localhost",2553)
     //The application must be run with -Dakka.config=akka-gui.conf in order
     //for akka to read the configuration for the gui
     remote.start()
     remote.register("trafficLight-West",westActor.start)
     remote.register("trafficLight-North",northActor.start)
     remote.register("trafficLight-East",eastActor.start)
-    //remote.register("trafficLight-South",southActor.start)
 
     val sensorRandomizer = new SensorRandomizerButton(0, 0, List(northSens, eastSens, westSens))
     //TODO Urs, the picture is upside down, north is now shown as down, left as east, right as west.

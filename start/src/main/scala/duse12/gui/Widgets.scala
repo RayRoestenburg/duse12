@@ -143,7 +143,7 @@ object TrafficLightWidget {
   }
 
   private def defineRowAndCols(heading: HEADING): (Int, Int) = {
-    if (heading == LANE.NORTH || heading == LANE.SOUTH) (0, 1) else (0, 5)
+    if (heading == LANE.NORTH) (0, 1) else (0, 5)
   }
 
 }
@@ -233,7 +233,7 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
       g2.setBackground(Color.WHITE)
       g2.setColor(Color.BLACK)
       g2.setStroke(stroke)
-      if (heading == LANE.NORTH || heading == LANE.SOUTH) {
+      if (heading == LANE.NORTH) {
         g2.draw(new Line2D.Double(size.width / 2, 0, size.width / 2, size.height))
       } else {
         g2.draw(new Line2D.Double(0, size.height / 2, size.width, size.height / 2))
