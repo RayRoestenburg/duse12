@@ -6,40 +6,22 @@ import akka.testkit.TestKit
 import java.util.Date
 import akka.util.duration._
 import akka.actor.Actor._
-import java.util.concurrent.atomic.AtomicBoolean
 import duse12.messages._
 
 /**
- * Specifications for the Junction.
- * TODO add specs for Sensor, TrafficLight, JunctionCommands, JunctionQueries
+ * Specs for the Junction.
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
-  class MockLight extends LightSwitch {
-    val state = new AtomicBoolean(false)
-
-    def isGreen = state.get
-
-    override def switchToRed {
-      state.set(false)
-    }
-
-    override def switchToGreen {
-      state.set(true)
-    }
-  }
-
   val statusWest = new MockLight()
   val statusNorth = new MockLight()
-  val statusSouth = new MockLight()
   val statusEast = new MockLight()
 
   val lightWest = actorOf(new TrafficLight(LANE.WEST, statusWest)).start
   val lightNorth = actorOf(new TrafficLight(LANE.NORTH, statusNorth)).start
   val lightEast = actorOf(new TrafficLight(LANE.EAST, statusEast)).start
-  val lightSouth = actorOf(new TrafficLight(LANE.SOUTH, statusSouth)).start
   val queries = actorOf(new JunctionQueries()).start
-  val lights = List(lightWest, lightNorth, lightEast, lightSouth)
+  val lights = List(lightWest, lightNorth, lightEast)
   val commands = actorOf(new JunctionCommands()).start
   val junction = actorOf(new Junction(trafficLights = lights, listener = testActor)).start
 
@@ -98,8 +80,6 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectLane(westLane)
         val northLane = fillLane(LANE.NORTH, 11, 11)
         expectLane(northLane)
-        val southLane = fillLane(LANE.SOUTH, 23, 7)
-        expectLane(southLane)
         val eastLane = fillLane(LANE.EAST, 31, 9)
         expectLane(eastLane)
         junction ! ControlTraffic()
@@ -114,7 +94,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
           junction ! p
           expectMsg(p)
         }
-        // decision should be on lane that is no maximum
+        // decision should be on lane that is now the maximum
         junction ! ControlTraffic()
         expectMsg(JunctionDecision(LANE.WEST))
       }
@@ -127,8 +107,6 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(JunctionDecision(LANE.NORTH))
         junction ! ControlTraffic()
         expectMsg(JunctionDecision(LANE.EAST))
-        junction ! ControlTraffic()
-        expectMsg(JunctionDecision(LANE.SOUTH))
         junction ! ControlTraffic()
         expectMsg(JunctionDecision(LANE.WEST))
         junction ! ControlTraffic()
