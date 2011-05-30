@@ -1,10 +1,9 @@
 package duse12
 
-import akka.actor.Actor
 import akka.actor.Actor._
 
 /**
- *
+ * Boot class
  */
 class Boot {
   val west = remote.actorFor("trafficLight-West", "localhost", 2553)
