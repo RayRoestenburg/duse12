@@ -43,7 +43,6 @@ class NullLayoutPanel extends Panel {
 }
 
 abstract class AbstractTimerButton(x: Int, y: Int, btnText:String = "") extends Button {
- val timerInterval:Int
 val timer:Timer
   private val startText = "Start " + btnText
   private val stopText = "Stop " + btnText
@@ -95,7 +94,6 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
  */
 class JunctionControlButton(x: Int, y: Int, junction: ActorRef, controlInverval: Int = 2000) extends AbstractTimerButton(x, y, "junction control") {
 
-  val timerInterval = controlInverval
   val timer: Timer = new Timer(controlInverval, (e: ActionEvent) => {
     junction ! ControlTraffic;
   })
@@ -136,7 +134,6 @@ class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Butt
  * Random sensor activator button
  */
 class SensorRandomizerButton(x: Int, y: Int, sensorButtons: List[SensorButton], incrementInverval: Int = 200) extends AbstractTimerButton(x, y, "random queuing") {
- val timerInterval = incrementInverval
   val timer: Timer =  new Timer(incrementInverval, (e: ActionEvent) => {
     var randomIndex: Int = abs(new Random().nextInt % sensorButtons.length)
     sensorButtons(randomIndex).doClick()
