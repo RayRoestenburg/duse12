@@ -6,12 +6,10 @@ import akka.testkit.TestKit
 import java.util.Date
 import akka.util.duration._
 import akka.actor.Actor._
-import java.util.concurrent.atomic.AtomicBoolean
 import duse12.messages._
 
 /**
- * Specifications for the Junction.
- * TODO add specs for Sensor, TrafficLight, JunctionCommands, JunctionQueries
+ * Specs for the Junction.
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
