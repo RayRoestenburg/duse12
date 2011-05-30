@@ -16,8 +16,8 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       // process queued vehicles,
       EventHandler.info(this, "Vehicle queued on %s lane.".format(msg.lane) )
       map.get(msg.lane) match {
-        case Some(count) => map.put(msg.lane, count + 1)
-        case None => map.put(msg.lane, 1)
+        case Some(count) => map.put(msg.lane, msg.queueCount)
+        case None => map.put(msg.lane, msg.queueCount)
       }
       listener.forward(msg)
     }
@@ -25,8 +25,8 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       EventHandler.info(this, "Vehicle passed on %s lane.".format(msg.lane) )
       // process passed vehicles,
       map.get(msg.lane) match {
-        case Some(count) => map.put(msg.lane, count - 1)
-        case None => map.put(msg.lane, 0)
+        case Some(count) => map.put(msg.lane, msg.queueCount)
+        case None => map.put(msg.lane, msg.queueCount)
       }
       listener.forward(msg)
     }
@@ -35,7 +35,11 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       EventHandler.info(this, "Deciding which lane gets the green signal.")
       var greenLane = lastDecision
       if (map.isEmpty) {
-        lastDecision = LANE.nextClockwise(lastDecision)
+        def nextClockwise(lane:LANE.HEADING):LANE.HEADING = {
+           val next = LANE.nextClockwise(lane)
+          if(next == LANE.SOUTH) nextClockwise(next) else next
+        }
+        lastDecision = nextClockwise(lastDecision)
         listener ! JunctionDecision(lastDecision)
         greenLane = lastDecision
       } else {
@@ -58,7 +62,8 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       listener.forward(msg)
     }
     case msg@_ => {
-      EventHandler.error(this, "Unknown msg '%s'received in Junction." format msg)
+      EventHandler.error(this, "Unknown msg '%s' received in Junction." format msg)
     }
   }
+
 }

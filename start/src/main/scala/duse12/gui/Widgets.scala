@@ -3,7 +3,7 @@ package duse12.gui
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.IOException
-import duse12.{LANE, TrafficLight, LightSwitch}
+import duse12.{LANE, LightSwitch}
 import LANE._
 import swing._
 import javax.swing.Timer
@@ -15,8 +15,8 @@ import scala.math._
 import GUIUtils._
 import collection.mutable.{Buffer, HashMap}
 import akka.actor.ActorRef
-import duse12.messages.VehicleDetected
 import akka.actor.Actor._
+import duse12.messages.{MsgUtils, VehicleQueued, ControlTraffic, VehicleDetected}
 
 //================================
 // GUI widgets
@@ -40,6 +40,28 @@ class NullLayoutPanel extends Panel {
     comp.peer.setBounds(comp.bounds)
     peer.add(comp.peer)
   }
+}
+
+abstract class AbstractTimerButton(x: Int, y: Int, btnText:String = "") extends Button {
+ val timerInterval:Int
+val timer:Timer
+  private val startText = "Start " + btnText
+  private val stopText = "Stop " + btnText
+
+var active = false
+  action = Action(startText) {
+    if (!active) {
+      timer.start
+      active = true
+      text = stopText
+    }
+    else {
+      timer.stop
+      active = false
+      text = startText
+    }
+  }
+  override def bounds = new Rectangle(x, y, preferredSize.getWidth.toInt, preferredSize.getHeight.toInt)
 }
 
 /**
@@ -67,6 +89,20 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
 }
 
 
+
+/**
+ * Button to activate junction conrol
+ */
+class JunctionControlButton(x: Int, y: Int, junction: ActorRef, controlInverval: Int = 2000) extends AbstractTimerButton(x, y, "junction control") {
+
+  val timerInterval = controlInverval
+  val timer: Timer = new Timer(controlInverval, (e: ActionEvent) => {
+    junction ! ControlTraffic;
+  })
+}
+
+
+
 //==============================================
 // Sensor
 //==============================================
@@ -79,19 +115,17 @@ class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Butt
   private val isVertical = LANE.isVertical(lane)
   private val width = if (isVertical) 30 else 150
   private val height = if (isVertical) 150 else 30
-  private var count = 0;
 
   override def bounds = new Rectangle(x, y, width, height)
 
   action = Action(createText("0")) {
-    //TODO generate an id in message
-    sensor ! VehicleDetected(1, false)
-    count += 1
-    refresh
+    (sensor !! VehicleDetected(MsgUtils.genNextId, false)).as[Int] match {
+      case Some(queueCount) => refresh(queueCount.toString)
+      case _ => refresh("?")
+    }
   }
 
-  def refresh = text = (createText("" + count))
-
+  def refresh(count:String) = text = (createText(count))
 
   private def createText(text: String): String = {
     return "<html>" + text + "</html>"
@@ -101,29 +135,12 @@ class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Butt
 /**
  * Random sensor activator button
  */
-class SensorRandomizerButton(x: Int, y: Int, sensors: List[ActorRef], incrementInverval: Int = 200) extends Button {
-
-  var active = false
-  val randomIncrementor: Timer = new Timer(incrementInverval, (e: ActionEvent) => {
-    var randomIndex: Int = abs(new Random().nextInt % sensors.length)
-    //TODO generate an id in message
-    sensors(randomIndex) ! VehicleDetected(1, false);
+class SensorRandomizerButton(x: Int, y: Int, sensorButtons: List[SensorButton], incrementInverval: Int = 200) extends AbstractTimerButton(x, y, "random queuing") {
+ val timerInterval = incrementInverval
+  val timer: Timer =  new Timer(incrementInverval, (e: ActionEvent) => {
+    var randomIndex: Int = abs(new Random().nextInt % sensorButtons.length)
+    sensorButtons(randomIndex).doClick()
   })
-
-  action = Action("Start random queuing") {
-    if (!active) {
-      randomIncrementor.start
-      active = true
-      text = "Stop random queuing"
-    }
-    else {
-      randomIncrementor.stop
-      active = false
-      text = "Start random queuing"
-    }
-  }
-
-  override def bounds = new Rectangle(x, y, preferredSize.getWidth.toInt, preferredSize.getHeight.toInt)
 }
 
 
