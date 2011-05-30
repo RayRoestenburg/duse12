@@ -5,8 +5,6 @@ import akka.actor.Actor._
 import duse12.{TrafficLight, LANE}
 
 /**
- * TODO Urs, the ui needs its own akka.conf, or can at least not read the one that is part of the microkernel app,
- * TODO that will give problems in registering and finding the actor.
  * Main method that launches the Junction GUI
  */
 object JunctionGUIMain extends SimpleSwingApplication {
@@ -29,11 +27,14 @@ object JunctionGUIAssembler {
     val eastLane = LANE.EAST
     val westLane = LANE.WEST
 
-    //TODO Urs, also add a south lane
+    //REMOTE ACTORS
+    val junction = remote.actorFor("junction", "localhost", 2552)
+
     val westSens = remote.actorFor("sensor-West", "localhost", 2552)
     val eastSens = remote.actorFor("sensor-East", "localhost", 2552)
     val northSens = remote.actorFor("sensor-North", "localhost", 2552)
-    //val south = remote.actorFor("trafficLight-Bottom", "localhost", 2553)
+
+    //WIDGETS
     val north = TrafficLightWidget(northLane, 570, 280, northSens)
     var northSensBtn = new SensorButton(northLane, 375, 530, northSens)
     WidgetRegistry.registry += (northLane -> (north, northSensBtn))
@@ -49,18 +50,20 @@ object JunctionGUIAssembler {
     val westActor = actorOf(new TrafficLight(LANE.WEST,west))
     val northActor = actorOf(new TrafficLight(LANE.NORTH,north))
     val eastActor =actorOf(new TrafficLight(LANE.EAST,east))
-    //val southActor =actorOf(new TrafficLight(LANE.SOUTH,south))
-    //remote.start("localhost",2553)
+
+    //ACTOR REGISTRATION
+    remote.start("localhost",2553)
+
     //The application must be run with -Dakka.config=akka-gui.conf in order
     //for akka to read the configuration for the gui
-    remote.start()
+    //remote.start()
+
     remote.register("trafficLight-West",westActor.start)
     remote.register("trafficLight-North",northActor.start)
     remote.register("trafficLight-East",eastActor.start)
-    //remote.register("trafficLight-South",southActor.start)
 
-    val sensorRandomizer = new SensorRandomizerButton(0, 0, List(northSens, eastSens, westSens))
-    //TODO Urs, the picture is upside down, north is now shown as down, left as east, right as west.
-    new ImagePanel("/crossing.png", sensorRandomizer, north, east, west, northSensBtn, eastSensBtn, westSensBtn)
+    val sensorRandomizer = new SensorRandomizerButton(0, 0, List(northSensBtn, eastSensBtn, westSensBtn))
+    val junctionControl = new JunctionControlButton(sensorRandomizer.preferredSize.getWidth.toInt + 10, 0, junction)
+    new ImagePanel("/crossing.png", sensorRandomizer, junctionControl, north, east, west, northSensBtn, eastSensBtn, westSensBtn)
   }
 }
