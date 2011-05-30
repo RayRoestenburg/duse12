@@ -45,7 +45,7 @@ package object messages {
    */
   case class JunctionDecision(lane: LANE.HEADING)
 
-/*
+/* TODO implement these in queries and commands
   /**
    * Query a traffic light
    */

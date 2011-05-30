@@ -39,15 +39,16 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
         listener ! JunctionDecision(lastDecision)
         greenLane = lastDecision
       } else {
+        EventHandler.info(this, "North:"+map.getOrElse(LANE.NORTH,0))
+        EventHandler.info(this, "West:"+map.getOrElse(LANE.WEST,0))
+        EventHandler.info(this, "East:"+map.getOrElse(LANE.EAST,0))
         // let the most queued vehicles through
-        val order = Ordering[Int].on[(LANE.HEADING, Int)](_._2)
-        val greenLane = map.max(order)._1
+        greenLane = map.maxBy( _._2 )._1
         listener ! JunctionDecision(greenLane)
       }
       EventHandler.info(this, "Green signal for %s lane." format greenLane)
       // just broadcast to all traffic lights.
       trafficLights.foreach(_ ! GreenLight(greenLane))
-      //TODO decrement the lane with a fixed size here
     }
     case msg: ResetJunction => {
       //reset the junction.

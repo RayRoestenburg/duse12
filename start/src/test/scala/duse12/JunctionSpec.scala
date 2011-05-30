@@ -6,32 +6,38 @@ import akka.testkit.TestKit
 import java.util.Date
 import akka.util.duration._
 import akka.actor.Actor._
-import duse12.messages._
 import java.util.concurrent.atomic.AtomicBoolean
+import duse12.messages._
 
 /**
  * Specifications for the Junction.
+ * TODO add specs for Sensor, TrafficLight, JunctionCommands, JunctionQueries
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
+
   class MockLight extends LightSwitch {
     val state = new AtomicBoolean(false)
+
     def isGreen = state.get
+
     override def switchToRed {
       state.set(false)
     }
+
     override def switchToGreen {
       state.set(true)
     }
   }
+
   val statusWest = new MockLight()
   val statusNorth = new MockLight()
   val statusSouth = new MockLight()
   val statusEast = new MockLight()
 
-  val lightWest = actorOf(new TrafficLight(LANE.WEST,statusWest)).start
-  val lightNorth = actorOf(new TrafficLight(LANE.NORTH,statusNorth)).start
-  val lightEast = actorOf(new TrafficLight(LANE.EAST,statusEast)).start
-  val lightSouth = actorOf(new TrafficLight(LANE.SOUTH,statusSouth)).start
+  val lightWest = actorOf(new TrafficLight(LANE.WEST, statusWest)).start
+  val lightNorth = actorOf(new TrafficLight(LANE.NORTH, statusNorth)).start
+  val lightEast = actorOf(new TrafficLight(LANE.EAST, statusEast)).start
+  val lightSouth = actorOf(new TrafficLight(LANE.SOUTH, statusSouth)).start
   val queries = actorOf(new JunctionQueries()).start
   val lights = List(lightWest, lightNorth, lightEast, lightSouth)
   val commands = actorOf(new JunctionCommands()).start
@@ -84,20 +90,33 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
           }
         }
         def newId(q: VehicleQueued): VehicleQueued = q.copy(id = q.id + 1)
-        def createLane(lane: LANE.HEADING, start: Int, size: Int) = List.iterate(VehicleQueued(start, lane, newDate), size)(newId _)
+        def fillLane(lane: LANE.HEADING, start: Int, size: Int) = List.iterate(VehicleQueued(start, lane, newDate), size)(newId _)
 
         junction ! ResetJunction()
         expectMsg(ResetJunction())
-        val westLane = createLane(LANE.WEST, 1, 10)
+        val westLane = fillLane(LANE.WEST, 1, 10)
         expectLane(westLane)
-        val northLane = createLane(LANE.NORTH, 11, 11)
+        val northLane = fillLane(LANE.NORTH, 11, 11)
         expectLane(northLane)
-        val southLane = createLane(LANE.SOUTH, 23, 7)
+        val southLane = fillLane(LANE.SOUTH, 23, 7)
         expectLane(southLane)
-        val eastLane = createLane(LANE.EAST, 31, 9)
+        val eastLane = fillLane(LANE.EAST, 31, 9)
         expectLane(eastLane)
         junction ! ControlTraffic()
         expectMsg(JunctionDecision(LANE.NORTH))
+      }
+    }
+    "should pick the next maximum queued lane vehicles have passed on the decided lane" in {
+      within(500 millis) {
+        // let all cars pass from north
+        for (i <- 11 until 22) {
+          val p = VehiclePassed(i, LANE.NORTH)
+          junction ! p
+          expectMsg(p)
+        }
+        // decision should be on lane that is no maximum
+        junction ! ControlTraffic()
+        expectMsg(JunctionDecision(LANE.WEST))
       }
     }
     "Decide on Clockwise lane starting with NORTH when there are no vehicles at the junction" in {

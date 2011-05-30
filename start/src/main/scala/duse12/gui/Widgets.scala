@@ -17,6 +17,7 @@ import collection.mutable.{Buffer, HashMap}
 import akka.actor.ActorRef
 import duse12.messages.VehicleDetected
 import akka.actor.Actor._
+
 //================================
 // GUI widgets
 //================================
@@ -83,8 +84,7 @@ class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Butt
   override def bounds = new Rectangle(x, y, width, height)
 
   action = Action(createText("0")) {
-    //TODO: call sensor actor with VehicleDetected message
-    //TODO id in message
+    //TODO generate an id in message
     sensor ! VehicleDetected(1, false)
     count += 1
     refresh
@@ -106,7 +106,7 @@ class SensorRandomizerButton(x: Int, y: Int, sensors: List[ActorRef], incrementI
   var active = false
   val randomIncrementor: Timer = new Timer(incrementInverval, (e: ActionEvent) => {
     var randomIndex: Int = abs(new Random().nextInt % sensors.length)
-    //TODO add a id generator, or remove id on messages
+    //TODO generate an id in message
     sensors(randomIndex) ! VehicleDetected(1, false);
   })
 
@@ -162,10 +162,11 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
   /**the dequeueTimer automatically dequeues vehicles when the trafficlight has
    * switched to green by calling the sensor decrement method */
   private val dequeueTimer = new Timer(dequeueInterval, (e: ActionEvent) => {
+    //TODO keep a list of vehicles queued on the traffic light and only send vehicle passed msgs for those that were queued
     // if (sensor.current <= 0) {
-    // (e.getSource.asInstanceOf[Timer]).stop
+     (e.getSource.asInstanceOf[Timer]).stop
     //} else {
-    sensor ! VehicleDetected(1, true)
+    //sensor ! VehicleDetected(1, true)
     //}
   })
 
@@ -184,7 +185,6 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
   /**
    * Switches trafficlight to red in
    * an asynchronous fashion
-   * TODO: the TrafficLightActor needs to call this method when a switch to red command [ChangeTrafficLightColor(Red)] is sent
    */
   def switchToRed: Unit = {
     new javax.swing.SwingWorker[Unit, AnyRef] {
@@ -207,7 +207,6 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
    * vehicles by calling the sensor decrement method
    * in intervals of 300 ms (default). When switched to red
    * the dequeuing is stopped.
-   * TODO: the TrafficLightActor needs to call this method when a switch to green command [ChangeTrafficLightColor(Green)] is sent
    */
   def switchToGreen: Unit = {
     new javax.swing.SwingWorker[Unit, AnyRef] {
