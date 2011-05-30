@@ -35,6 +35,7 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       EventHandler.info(this, "Deciding which lane gets the green signal.")
       var greenLane = lastDecision
       if (map.isEmpty) {
+        //TODO: rather clumsy approach to skip SOUTH. Should be done in a more elegant way...
         def nextClockwise(lane:LANE.HEADING):LANE.HEADING = {
            val next = LANE.nextClockwise(lane)
           if(next == LANE.SOUTH) nextClockwise(next) else next
