@@ -30,9 +30,10 @@ class JunctionQueriesSpec extends WordSpec with BeforeAndAfterAll with ShouldMat
         expectMsg(JunctionDecision(LANE.NORTH))
         commands !! DecisionsRequest() match {
           case Some(response:DecisionsResponse) => {
-            response.history(0) should be (JunctionDecision(LANE.WEST))
-            response.history(1) should be (JunctionDecision(LANE.EAST))
-            response.history(2) should be (JunctionDecision(LANE.NORTH))
+            response.history.size should be (3)
+            response.history.contains(JunctionDecision(LANE.WEST)) should be (true)
+            response.history.contains(JunctionDecision(LANE.EAST)) should be (true)
+            response.history.contains(JunctionDecision(LANE.NORTH)) should be (true)
           }
           case None => fail("no response")
         }

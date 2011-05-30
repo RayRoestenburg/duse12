@@ -54,7 +54,7 @@ package messages {
 
 
   case class DecisionsRequest()
-  case class DecisionsResponse(history:List[JunctionDecision])
+  case class DecisionsResponse(history:List[JunctionEvent])
 
 /* TODO implement these in queries and commands
   /**
