@@ -56,7 +56,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
   "The Junction" should {
     "increment a queue count for every lane and forward VehicleQueued messages to the listener " in {
       within(500 millis) {
-        val msg = VehicleQueued(1, LANE.WEST, newDate)
+        val msg = VehicleQueued(1, LANE.WEST, 1, newDate)
         junction ! msg
         expectMsg(msg)
       }
@@ -70,7 +70,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
     }
     "decrement queue count for every lane and forward VehiclePassed messages to the listener" in {
       within(500 millis) {
-        val msg = VehiclePassed(1, LANE.WEST, newDate)
+        val msg = VehiclePassed(1, LANE.WEST, 1, newDate)
         junction ! msg
         expectMsg(msg)
       }
@@ -81,7 +81,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(ResetJunction())
       }
     }
-    "decide on lane which has most queued vehicles compared all other lanes" in {
+    "decide on lane which has most queueCount vehicles compared all other lanes" in {
       within(500 millis) {
         def expectLane(lane: List[VehicleQueued]) = {
           for (q <- lane) {
@@ -90,7 +90,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
           }
         }
         def newId(q: VehicleQueued): VehicleQueued = q.copy(id = q.id + 1)
-        def fillLane(lane: LANE.HEADING, start: Int, size: Int) = List.iterate(VehicleQueued(start, lane, newDate), size)(newId _)
+        def fillLane(lane: LANE.HEADING, start: Int, size: Int) = List.iterate(VehicleQueued(start, lane, 1, newDate), size)(newId _)
 
         junction ! ResetJunction()
         expectMsg(ResetJunction())
@@ -106,11 +106,11 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(JunctionDecision(LANE.NORTH))
       }
     }
-    "should pick the next maximum queued lane vehicles have passed on the decided lane" in {
+    "should pick the next maximum queueCount lane vehicles have passed on the decided lane" in {
       within(500 millis) {
         // let all cars pass from north
         for (i <- 11 until 22) {
-          val p = VehiclePassed(i, LANE.NORTH)
+          val p = VehiclePassed(i, LANE.NORTH, i)
           junction ! p
           expectMsg(p)
         }
