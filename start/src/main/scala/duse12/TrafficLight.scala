@@ -30,7 +30,11 @@ class TrafficLight(lane: LANE.HEADING, lightSwitch: LightSwitch) extends Actor {
       maybeGreen = maybeGreen.map {
         currentState => switch(lane == msg.lane, currentState)
       }.orElse {
-        lightSwitch.switchToRed
+        if (lane == msg.lane) {
+          lightSwitch.switchToGreen
+        } else {
+          lightSwitch.switchToRed
+        }
         Some(false)
       }
     }

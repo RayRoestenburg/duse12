@@ -15,20 +15,6 @@ import duse12.messages._
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
-  class MockLight extends LightSwitch {
-    val state = new AtomicBoolean(false)
-
-    def isGreen = state.get
-
-    override def switchToRed {
-      state.set(false)
-    }
-
-    override def switchToGreen {
-      state.set(true)
-    }
-  }
-
   val statusWest = new MockLight()
   val statusNorth = new MockLight()
   val statusEast = new MockLight()
@@ -110,7 +96,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
           junction ! p
           expectMsg(p)
         }
-        // decision should be on lane that is no maximum
+        // decision should be on lane that is now the maximum
         junction ! ControlTraffic()
         expectMsg(JunctionDecision(LANE.WEST))
       }
