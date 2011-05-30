@@ -3,7 +3,7 @@ package duse12.gui
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.IOException
-import duse12.LANE
+import duse12.{LANE, TrafficLight, LightSwitch}
 import LANE._
 import swing._
 import javax.swing.Timer
@@ -14,7 +14,9 @@ import java.util.Random
 import scala.math._
 import GUIUtils._
 import collection.mutable.{Buffer, HashMap}
-
+import akka.actor.ActorRef
+import duse12.messages.VehicleDetected
+import akka.actor.Actor._
 //================================
 // GUI widgets
 //================================
@@ -38,6 +40,7 @@ class NullLayoutPanel extends Panel {
     peer.add(comp.peer)
   }
 }
+
 /**
  * ImagePanel that displays an image
  */
@@ -54,7 +57,9 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
       }
     }
   }
+
   preferredSize = new Dimension(image.getWidth(null), image.getHeight(null))
+
   override def paintComponent(g: Graphics2D): Unit = {
     g.drawImage(image, 0, 0, null)
   }
@@ -68,21 +73,24 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
  * Button to active a sensor
  * See TODO in code
  */
-class SensorButton(lane:HEADING, x: Int, y: Int, sensor:Sensor) extends Button {
+class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Button {
 
   private val isVertical = LANE.isVertical(lane)
-  private val width = if(isVertical)30 else 150
-  private val height = if(isVertical)150 else 30
+  private val width = if (isVertical) 30 else 150
+  private val height = if (isVertical) 150 else 30
+  private var count = 0;
 
   override def bounds = new Rectangle(x, y, width, height)
 
   action = Action(createText("0")) {
-   //TODO: call sensor actor with VehicleDetected message
-    sensor.increment
+    //TODO: call sensor actor with VehicleDetected message
+    //TODO id in message
+    sensor ! VehicleDetected(1, false)
+    count += 1
     refresh
   }
 
-  def refresh =  text = (createText("" + sensor.current))
+  def refresh = text = (createText("" + count))
 
 
   private def createText(text: String): String = {
@@ -93,13 +101,14 @@ class SensorButton(lane:HEADING, x: Int, y: Int, sensor:Sensor) extends Button {
 /**
  * Random sensor activator button
  */
-class SensorRandomizerButton(x: Int, y: Int, sensors: List[Sensor], incrementInverval:Int = 200) extends Button  {
+class SensorRandomizerButton(x: Int, y: Int, sensors: List[ActorRef], incrementInverval: Int = 200) extends Button {
 
   var active = false
-  val randomIncrementor: Timer = new Timer(incrementInverval, (e:ActionEvent) => {
-      var randomIndex: Int = abs(new Random().nextInt % sensors.length)
-      sensors(randomIndex).increment
-    })
+  val randomIncrementor: Timer = new Timer(incrementInverval, (e: ActionEvent) => {
+    var randomIndex: Int = abs(new Random().nextInt % sensors.length)
+    //TODO add a id generator, or remove id on messages
+    sensors(randomIndex) ! VehicleDetected(1, false);
+  })
 
   action = Action("Start random queuing") {
     if (!active) {
@@ -113,6 +122,7 @@ class SensorRandomizerButton(x: Int, y: Int, sensors: List[Sensor], incrementInv
       text = "Start random queuing"
     }
   }
+
   override def bounds = new Rectangle(x, y, preferredSize.getWidth.toInt, preferredSize.getHeight.toInt)
 }
 
@@ -127,7 +137,7 @@ class SensorRandomizerButton(x: Int, y: Int, sensors: List[Sensor], incrementInv
  */
 object TrafficLightWidget {
 
-  def apply(heading: HEADING, x: Int, y: Int, sensor: Sensor) = {
+  def apply(heading: HEADING, x: Int, y: Int, sensor: ActorRef) = {
     val (rows, cols) = defineRowAndCols(heading)
     new TrafficLightWidget(heading, rows, cols, x, y)(sensor)
   }
@@ -137,27 +147,27 @@ object TrafficLightWidget {
   }
 
 }
+
 /**
  * TrafficLightWidget
  * See TODO in code
  *
  */
-class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: Int, y: Int, dequeueInterval:Int = 300)(val sensor: Sensor ) extends GridPanel(rows, cols) {
+class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: Int, y: Int, dequeueInterval: Int = 300)(val sensor: ActorRef) extends GridPanel(rows, cols) with LightSwitch {
 
   private val green = new TrafficLightLamp(Color.green)
   private val yellow = new TrafficLightLamp(Color.yellow)
   private val red = new TrafficLightLamp(Color.red)
   private val lock: AnyRef = new AnyRef
-  /** the dequeueTimer automatically dequeues vehicles when the trafficlight has
+  /**the dequeueTimer automatically dequeues vehicles when the trafficlight has
    * switched to green by calling the sensor decrement method */
-  private val dequeueTimer = new Timer(dequeueInterval, (e:ActionEvent) => {
-          if (sensor.current <= 0) {
-            (e.getSource.asInstanceOf[Timer]).stop
-          } else {
-            //TODO: call sensor actor with VehiclePassed message
-            sensor.decrement
-          }
-        })
+  private val dequeueTimer = new Timer(dequeueInterval, (e: ActionEvent) => {
+    // if (sensor.current <= 0) {
+    // (e.getSource.asInstanceOf[Timer]).stop
+    //} else {
+    sensor ! VehicleDetected(1, true)
+    //}
+  })
 
   init(heading)
 
@@ -177,7 +187,7 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
    * TODO: the TrafficLightActor needs to call this method when a switch to red command [ChangeTrafficLightColor(Red)] is sent
    */
   def switchToRed: Unit = {
-       new javax.swing.SwingWorker[Unit, AnyRef] {
+    new javax.swing.SwingWorker[Unit, AnyRef] {
       def doInBackground: Unit = {
         lock synchronized {
           green.turnOff
@@ -200,11 +210,15 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
    * TODO: the TrafficLightActor needs to call this method when a switch to green command [ChangeTrafficLightColor(Green)] is sent
    */
   def switchToGreen: Unit = {
-     lock synchronized {
-      red.turnOff
-      green.turnOn
-      dequeueTimer.start
-    }
+    new javax.swing.SwingWorker[Unit, AnyRef] {
+      def doInBackground: Unit = {
+        lock synchronized {
+          red.turnOff
+          green.turnOn
+          dequeueTimer.start
+        }
+      }
+    }.execute
   }
 
 
@@ -262,4 +276,5 @@ class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: 
     }
 
   }
+
 }

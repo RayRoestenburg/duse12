@@ -13,6 +13,7 @@
   </appender>
   <logger name="akka" level="INFO"/>
   <logger name="org.mortbay.log.class" level="INFO"/>
+  <logger name="ch.qos.logback" level="INFO"/>
   <root level="INFO">
     <appender-ref ref="R"/>
   </root>

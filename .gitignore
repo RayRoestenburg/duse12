@@ -2,6 +2,9 @@ target
 build
 lib_managed
 lib
+logs
+*.log
+*.log.*
 .project
 .classpath
 *.iml
