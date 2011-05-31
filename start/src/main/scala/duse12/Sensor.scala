@@ -22,6 +22,9 @@ class Sensor(lane: LANE.HEADING, junction: ActorRef) extends Actor {
       junction ! VehiclePassed(msg.id, lane, queueCount, msg.timestamp)
       self.reply(queueCount)
     }
+    case msg: CountVehiclesRequest => {
+      self.reply(queueCount)
+    }
     case msg@_ => {
       EventHandler.error(this, "Unknown msg '%s'received in Sensor." format msg)
     }

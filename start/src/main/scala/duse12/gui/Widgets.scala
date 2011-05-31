@@ -95,7 +95,7 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
 class JunctionControlButton(x: Int, y: Int, junction: ActorRef, controlInverval: Int = 2000) extends AbstractTimerButton(x, y, "junction control") {
 
   val timer: Timer = new Timer(controlInverval, (e: ActionEvent) => {
-    junction ! ControlTraffic();
+    junction ! ControlTraffic()
   })
 }
 

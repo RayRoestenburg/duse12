@@ -5,7 +5,8 @@ import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.ShouldMatchers
 import akka.testkit.TestKit
 import akka.util.duration._
-import duse12.messages.{VehiclePassed, VehicleQueued, VehicleDetected}
+import duse12.messages.{CountVehiclesRequest, VehiclePassed, VehicleQueued, VehicleDetected}
+import scala.Some
 
 /**
  *  Specs for the Sensor Actor
@@ -24,14 +25,16 @@ class SensorSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers wit
       within(500 millis) {
         val detected = VehicleDetected(1)
         sensor ! detected
-        expectMsg(VehicleQueued(1, LANE.WEST, detected.timestamp))
+        expectMsg(VehicleQueued(1, LANE.WEST,1,detected.timestamp))
+        expectMsg(1)
       }
     }
     "turn a received VehicleDetected message into a VehiclePassed message and forward it to the junction if crossedMarker is true " in {
       within(500 millis) {
         val detected = VehicleDetected(1,true)
         sensor ! detected
-        expectMsg(VehiclePassed(1, LANE.WEST, detected.timestamp))
+        expectMsg(VehiclePassed(1,LANE.WEST,0,detected.timestamp))
+        expectMsg(0)
       }
     }
   }
