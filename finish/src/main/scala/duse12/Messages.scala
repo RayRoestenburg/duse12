@@ -68,6 +68,5 @@ case class DecisionsRequest()
 
 case class DecisionsResponse(history: List[JunctionEvent])
 
-
 }
 }
