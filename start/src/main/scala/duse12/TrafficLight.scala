@@ -12,5 +12,6 @@ class TrafficLight(lane: LANE.HEADING, lightSwitch: LightSwitch) extends Actor {
 
   def receive = {
     //TODO implement
+    case _ =>
   }
 }

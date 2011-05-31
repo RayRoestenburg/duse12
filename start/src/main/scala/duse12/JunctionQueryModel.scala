@@ -11,5 +11,7 @@ class JunctionQueryModel(listener:Option[ActorRef]=None) extends Actor {
 
   def receive = {
     //TODO implement
+    case _ =>
+
   }
 }

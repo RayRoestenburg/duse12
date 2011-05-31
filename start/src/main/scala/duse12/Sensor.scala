@@ -12,5 +12,7 @@ class Sensor(lane: LANE.HEADING, junction: ActorRef) extends Actor {
 
   def receive = {
     //TODO implement
+    case _ =>
+
   }
 }
