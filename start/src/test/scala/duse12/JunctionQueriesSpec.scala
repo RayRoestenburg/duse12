@@ -12,7 +12,7 @@ import duse12.messages.{DecisionsResponse, DecisionsRequest, JunctionDecision}
  */
 class JunctionQueriesSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
-  val commands = actorOf(new JunctionQueries(listener = Some(testActor))).start
+  val commands = actorOf(new JunctionQueryModel(listener = Some(testActor))).start
 
   override protected def afterAll(): scala.Unit = {
     commands.stop

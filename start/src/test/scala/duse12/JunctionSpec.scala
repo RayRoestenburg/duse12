@@ -20,7 +20,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
   val lightWest = actorOf(new TrafficLight(LANE.WEST, statusWest)).start
   val lightNorth = actorOf(new TrafficLight(LANE.NORTH, statusNorth)).start
   val lightEast = actorOf(new TrafficLight(LANE.EAST, statusEast)).start
-  val queries = actorOf(new JunctionQueries()).start
+  val queries = actorOf(new JunctionQueryModel()).start
   val lights = List(lightWest, lightNorth, lightEast)
   val junction = actorOf(new Junction(trafficLights = lights, listener = testActor)).start
 

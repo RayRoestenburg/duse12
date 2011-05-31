@@ -6,6 +6,7 @@ import akka.event.EventHandler
 
 /**
  * The junction of roads, receives vehicles and communicates with TrafficLights
+ * Handles commands.
  */
 class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor {
   val map = new HashMap[LANE.HEADING, Int]
