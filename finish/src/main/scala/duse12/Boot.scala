@@ -20,6 +20,4 @@ class Boot {
   remote.register("junction", junction)
   remote.register("queries", queries)
   remote.start("localhost", 2552)
-  //TODO register JunctionCommands and Queries as remote actors and call these from swing app.
-  //
 }
