@@ -8,9 +8,9 @@ import akka.util.duration._
 import scala.Some
 import duse12.messages.{DecisionsResponse, DecisionsRequest, JunctionDecision}
 /**
- * Spec for JunctionCommands
+ * Spec for JunctionQueries
  */
-class JunctionQueriesSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
+class JunctionQueryModelSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
   val commands = actorOf(new JunctionQueryModel(listener = Some(testActor))).start
 
