@@ -18,7 +18,7 @@ class Sensor(lane: LANE.HEADING, junction: ActorRef) extends Actor {
     }
     case msg: VehicleDetected if msg.crossedMarker => {
       EventHandler.info(this,"Vehicle passed %s lane sensor.".format(lane) )
-      queueCount -= 1
+      if(queueCount > 0) queueCount -= 1
       junction ! VehiclePassed(msg.id, lane, queueCount, msg.timestamp)
       self.reply(queueCount)
     }
