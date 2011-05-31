@@ -11,7 +11,11 @@ import java.util.concurrent.{TimeUnit, TimeoutException, CyclicBarrier}
 
 /**
  * Specs for TrafficLight Actor.
- * Use a CyclicBarrier and the MockLight in this test.
+ * The TrafficLight should:
+ * 1. switch to green if the light is not green already on a GreenLight(true) message
+ * 2. switch to red if the light is not red already on a GreenLight(false) message
+ * 3. handle both ! and !!
+ * Use a CyclicBarrier and the MockLight in this test for the async ! test.
  */
 class TrafficLightSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
   val barrier = new CyclicBarrier(2);
@@ -25,15 +29,15 @@ class TrafficLightSpec extends WordSpec with BeforeAndAfterAll with ShouldMatche
   }
 
   "The TrafficLight" should {
-    "switch the light to green on a GreenLight message that matches the lane of the TrafficLight if the light is not already green " in {
+    "switch the light to green if the light is not already green on ! GreenLight(true)" in {
       within(500 millis) {
         mockLight.state.get() should be(false)
         barrier.reset()
-        light ! GreenLight(LANE.WEST)
+        light ! GreenLight(true)
         barrier.await
         mockLight.state.get() should be(true)
         barrier.reset()
-        light ! GreenLight(LANE.WEST)
+        light ! GreenLight(true)
         try {
           barrier.await(250, TimeUnit.MILLISECONDS)
         } catch {
@@ -41,15 +45,15 @@ class TrafficLightSpec extends WordSpec with BeforeAndAfterAll with ShouldMatche
         }
       }
     }
-    "switch the light to red on a GreenLight message that does not match the lane of the TrafficLight if the light is not already red " in {
+    "switch the light to red if the light is not already red on ! GreenLight(false)" in {
       within(500 millis) {
         mockLight.state.get() should be(true)
         barrier.reset()
-        light ! GreenLight(LANE.EAST)
+        light ! GreenLight(false)
         barrier.await
         mockLight.state.get() should be(false)
         barrier.reset()
-        light ! GreenLight(LANE.EAST)
+        light ! GreenLight(false)
         try {
           barrier.await(250, TimeUnit.MILLISECONDS)
         } catch {

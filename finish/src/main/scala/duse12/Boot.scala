@@ -10,7 +10,7 @@ class Boot {
   val east = remote.actorFor("trafficLight-East", "localhost", 2553)
   val north = remote.actorFor("trafficLight-North", "localhost", 2553)
   val queries = actorOf(new JunctionQueryModel()).start
-  val junction = actorOf(new Junction(trafficLights = List(north,east, west),listener = queries)).start
+  val junction = actorOf(new Junction(lights = Map(LANE.NORTH -> north,LANE.EAST ->east, LANE.WEST ->west),listener = queries)).start
   val westSensor = actorOf(new Sensor(LANE.WEST,junction)).start
   val eastSensor = actorOf(new Sensor(LANE.EAST,junction)).start
   val northSensor = actorOf(new Sensor(LANE.NORTH,junction)).start

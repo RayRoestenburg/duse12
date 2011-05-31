@@ -8,7 +8,10 @@ import akka.util.duration._
 import scala.Some
 import duse12.messages.{DecisionsResponse, DecisionsRequest, JunctionDecision}
 /**
- * Spec for JunctionQueries
+ * Spec for JunctionQueryModel.
+ * The JunctionQueryModel should:
+ *  return a history list of decisions made.
+ *  call the JunctionQueryModel with !! DecisionsRequest() and check the result.
  */
 class JunctionQueryModelSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 

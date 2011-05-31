@@ -5,11 +5,17 @@ import org.scalatest.{BeforeAndAfterAll, WordSpec}
 import org.scalatest.matchers.ShouldMatchers
 import akka.testkit.TestKit
 import akka.util.duration._
-import duse12.messages.{CountVehiclesRequest, VehiclePassed, VehicleQueued, VehicleDetected}
+import duse12.messages.{VehiclePassed, VehicleQueued, VehicleDetected}
 import scala.Some
 
 /**
- *  Specs for the Sensor Actor
+ *  Specs for the Sensor Actor.
+ *  The Sensor should:
+ *  1. turn a received VehicleDetected message into a VehicleQueued message and async forward it to the junction if crossedMarker is false
+ *  2. turn a received VehicleDetected message into a VehiclePassed message and async forward it to the junction if crossedMarker is true
+ *  3. keep track of the amount queued on the lane (increment in VehicleDetected(id, false) and decrement on VehicleDetected(id, true))
+ *  4. handle !! for both VehicleDetected msgs and return the amount queued as an Int
+ *  Use the TestKit to confirm expected forwarded messages
  */
 class SensorSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 

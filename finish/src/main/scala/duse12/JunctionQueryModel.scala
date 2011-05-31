@@ -5,7 +5,7 @@ import akka.actor.{ActorRef, Actor}
 import akka.event.EventHandler
 
 /**
- * Handle forwarded commands and queries
+ * Handle forwarded commands and queries.
  */
 class JunctionQueryModel(listener:Option[ActorRef]=None) extends Actor {
   private var events = List[JunctionEvent]()

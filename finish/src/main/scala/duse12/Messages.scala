@@ -18,43 +18,41 @@ object MsgUtils {
 
 import MsgUtils._
 
+/**
+ * Event trait
+ */
 trait JunctionEvent {
-
 }
 
 /**
  * message sent to the sensor that a vehicle is detected,
- * crossedMarker indicates if the vehicle crossed the marker on the road (passed the sensor)
+ * crossedMarker indicates if the vehicle crossed the marker on the road (passed the junction)
  * or if it is approaching the junction
  */
 case class VehicleDetected(id: Int, crossedMarker: Boolean = false, timestamp: Date = newDate) extends JunctionEvent
 
 /**
- * message sent from sensor to junction, that a vehicle is queueCount on the lane
- * and that should be sent to the TrafficLight (for display purposes).
+ * message sent from sensor to junction, that a vehicle is queued on the lane
  */
 case class VehicleQueued(id: Int, lane: LANE.HEADING, queueCount: Int, timestamp: Date = newDate) extends JunctionEvent
 
-case class CountVehiclesRequest()
-
 /**
- * message sent from the sensor to the junction that a vehicle has passed the traffic light
+ * message sent from the sensor to the junction that a vehicle has passed the junction
  */
 case class VehiclePassed(id: Int, lane: LANE.HEADING, queueCount: Int, timestamp: Date = newDate) extends JunctionEvent
 
 /**
- * Command to switch a traffic light on a lane to green.
- * If a TrafficLight gets a GreenLight signal for another lane, it should switch to red.
+ * Command to switch a traffic light to green or red. (true is green)
  */
-case class GreenLight(lane: LANE.HEADING)
+case class GreenLight(on:Boolean)
 
 /**
- * Command to control traffic, which should be sent by a scheduler to the junction.
+ * Command to control traffic
  */
 case class ControlTraffic()
 
 /**
- * Resets the Junction
+ * Command to reset the junction
  */
 case class ResetJunction() extends JunctionEvent
 
@@ -63,9 +61,14 @@ case class ResetJunction() extends JunctionEvent
  */
 case class JunctionDecision(lane: LANE.HEADING) extends JunctionEvent
 
-
+/**
+ * Query for decisions made in the past
+ */
 case class DecisionsRequest()
 
+/**
+ * Response to the Query for decisions made in the past
+ */
 case class DecisionsResponse(history: List[JunctionEvent])
 
 }

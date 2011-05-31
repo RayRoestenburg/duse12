@@ -1,21 +1,21 @@
 package duse12
-import duse12.messages._
+
 import akka.actor.{ActorRef, Actor}
 import collection.mutable.HashMap
 import akka.event.EventHandler
+import duse12.messages._
 
 /**
- * The junction of roads, receives vehicles and communicates with TrafficLights
- * Handles commands.
+ * The junction of roads, receives vehicles and communicates with TrafficLights,
+ * Handles commands, asynchronously passes messages to listener (which should be the JunctionQueryModel ActorRef).
  */
-class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor {
-  val map = new HashMap[LANE.HEADING, Int]
-  var lastDecision = LANE.WEST
+class Junction(lights: Map[LANE.HEADING, ActorRef], listener: ActorRef) extends Actor {
+  val map = new HashMap[LANE.HEADING, Int]()
 
   def receive = {
     case msg: VehicleQueued => {
       // process queued vehicles,
-      EventHandler.info(this, "Vehicle queued on %s lane.".format(msg.lane) )
+      EventHandler.info(this, "Vehicle queued on %s lane.".format(msg.lane))
       map.get(msg.lane) match {
         case Some(count) => map.put(msg.lane, msg.queueCount)
         case None => map.put(msg.lane, msg.queueCount)
@@ -23,7 +23,7 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
       listener.forward(msg)
     }
     case msg: VehiclePassed => {
-      EventHandler.info(this, "Vehicle passed on %s lane.".format(msg.lane) )
+      EventHandler.info(this, "Vehicle passed on %s lane.".format(msg.lane))
       // process passed vehicles,
       map.get(msg.lane) match {
         case Some(count) => map.put(msg.lane, msg.queueCount)
@@ -34,28 +34,33 @@ class Junction(trafficLights: List[ActorRef], listener: ActorRef) extends Actor 
     case msg: ControlTraffic => {
       // decide on green light,
       EventHandler.info(this, "Deciding which lane gets the green signal.")
-      var greenLane = lastDecision
-      if (map.isEmpty) {
-        lastDecision = LANE.nextClockwise(lastDecision)
-        listener ! JunctionDecision(lastDecision)
-        greenLane = lastDecision
+      if (map.isEmpty || map.values.max == 0) {
+        lights.values.foreach(_ !! GreenLight(on = false))
       } else {
-        EventHandler.info(this, "North:"+map.getOrElse(LANE.NORTH,0))
-        EventHandler.info(this, "West:"+map.getOrElse(LANE.WEST,0))
-        EventHandler.info(this, "East:"+map.getOrElse(LANE.EAST,0))
+        EventHandler.info(this, "North:" + map.getOrElse(LANE.NORTH, 0))
+        EventHandler.info(this, "West:" + map.getOrElse(LANE.WEST, 0))
+        EventHandler.info(this, "East:" + map.getOrElse(LANE.EAST, 0))
         // let the most queued vehicles through
-        greenLane = map.maxBy( _._2 )._1
+        val greenLane = map.maxBy(_._2)._1
         listener ! JunctionDecision(greenLane)
+        for (value <- LANE.values) {
+          if (value == greenLane) {
+            lights.get(value).foreach {
+              _ !! GreenLight(on = true)
+            }
+          } else {
+            lights.get(value).foreach {
+              _ !! GreenLight(on = false)
+            }
+          }
+        }
+        EventHandler.info(this, "Green signal for %s lane." format greenLane)
       }
-      EventHandler.info(this, "Green signal for %s lane." format greenLane)
-      // just broadcast to all traffic lights.
-      trafficLights.foreach(_ ! GreenLight(greenLane))
     }
     case msg: ResetJunction => {
       //reset the junction.
       EventHandler.info(this, "Resetting junction.")
       map.clear
-      lastDecision = LANE.WEST
       listener.forward(msg)
     }
     case msg@_ => {

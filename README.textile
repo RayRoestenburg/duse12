@@ -4,3 +4,6 @@ Akka Workshop project for the DUSE XII meetup.
 
 The start folder contains a starting point sbt project for the workshop.
 The finish folder contains a finished solution.
+
+Don't forget to first run sbt update (in the start directory). After that you can build the gui and the kernel with sbt dist-gui. 
+The goal of the workshop is to implement the Actors in src/main/scala/duse12 based on the instructions in the Specs in src/test/scala/duse12, when everything is green, distribute the gui and kernel, run both gui and kernel and watch the show! 

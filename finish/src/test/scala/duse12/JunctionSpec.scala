@@ -9,7 +9,12 @@ import akka.actor.Actor._
 import duse12.messages._
 
 /**
- * Specs for the Junction.
+ * Specs for the Junction.  The Junction should :
+ * 1. decide on a JunctionDecision and async send the JunctionDecision to the listener on a ! ControlTraffic() message
+ * 2. handle and async forward VehicleQueued and VehiclePassed messages to the listener, keep track of queued per lane
+ * 3. decide on the lane with the most queued vehicles, only one green light at a time
+ * 4. communicate with the lights using !! (blocking)
+ * 5. reset the junction on a ResetJunction() msg (which sets all lights to red) and async forward the ResetJunction() message
  */
 class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers with TestKit {
 
@@ -21,12 +26,12 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
   val lightNorth = actorOf(new TrafficLight(LANE.NORTH, statusNorth)).start
   val lightEast = actorOf(new TrafficLight(LANE.EAST, statusEast)).start
   val queries = actorOf(new JunctionQueryModel()).start
-  val lights = List(lightWest, lightNorth, lightEast)
-  val junction = actorOf(new Junction(trafficLights = lights, listener = testActor)).start
+  val lights = Map(LANE.NORTH -> lightNorth,LANE.EAST ->lightEast, LANE.WEST ->lightWest)
+  val junction = actorOf(new Junction(lights , listener = testActor)).start
 
   override protected def afterAll(): scala.Unit = {
     junction.stop
-    lights.foreach(_.stop)
+    lights.values.foreach(_.stop)
     queries.stop
     stopTestActor
   }
@@ -41,21 +46,21 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(msg)
       }
     }
-    "control traffic when a ControlTraffic command is received and forward a JunctionDecision" in {
+    "control traffic when a ControlTraffic() command msg is received and forward a JunctionDecision" in {
       within(500 millis) {
         val msg = ControlTraffic()
         junction ! msg
         expectMsg(JunctionDecision(LANE.WEST))
       }
     }
-    "VehiclePassed messages to the listener" in {
+    "forward VehiclePassed messages to the listener" in {
       within(500 millis) {
         val msg = VehiclePassed(1, LANE.WEST, 1, newDate)
         junction ! msg
         expectMsg(msg)
       }
     }
-    "reset queue count for every lane and forward ResetJunction messages to the listener" in {
+    "reset queue count for every lane on ResetJunction() msg and forward ResetJunction() message to the listener" in {
       within(500 millis) {
         junction ! ResetJunction()
         expectMsg(ResetJunction())
@@ -84,7 +89,7 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(JunctionDecision(LANE.NORTH))
       }
     }
-    "should pick the next maximum queueCount lane vehicles have passed on the decided lane" in {
+    "pick the next maximum queueCount lane vehicles have passed on the decided lane" in {
       within(500 millis) {
         // let all cars pass from north
         var k = 1
@@ -99,18 +104,12 @@ class JunctionSpec extends WordSpec with BeforeAndAfterAll with ShouldMatchers w
         expectMsg(JunctionDecision(LANE.WEST))
       }
     }
-    "Decide on Clockwise lane starting with NORTH when there are no vehicles at the junction" in {
+    "not decide if there are no vehicles queued (implied by not sending a message to the listener)" in {
       within(500 millis) {
         junction ! ResetJunction()
         expectMsg(ResetJunction())
         junction ! ControlTraffic()
-        expectMsg(JunctionDecision(LANE.NORTH))
-        junction ! ControlTraffic()
-        expectMsg(JunctionDecision(LANE.EAST))
-        junction ! ControlTraffic()
-        expectMsg(JunctionDecision(LANE.WEST))
-        junction ! ControlTraffic()
-        expectMsg(JunctionDecision(LANE.NORTH))
+        expectNoMsg
       }
     }
   }
