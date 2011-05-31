@@ -5,8 +5,13 @@ import akka.util.Duration
 
 package messages {
 
-  object MsgUtils {
+import java.util.concurrent.atomic.AtomicInteger
+
+object MsgUtils {
+    private val counter = new AtomicInteger()
     def newDate = new Date(System.currentTimeMillis())
+    def genNextId = counter.incrementAndGet()
+
   }
   import MsgUtils._
 
@@ -21,15 +26,17 @@ package messages {
   case class VehicleDetected(id: Int, crossedMarker: Boolean = false, timestamp: Date = newDate) extends JunctionEvent
 
   /**
-   * message sent from sensor to junction, that a vehicle is queued on the lane
+   * message sent from sensor to junction, that a vehicle is queueCount on the lane
    * and that should be sent to the TrafficLight (for display purposes).
    */
-  case class VehicleQueued(id: Int, lane: LANE.HEADING, timestamp: Date = newDate) extends JunctionEvent
+  case class VehicleQueued(id: Int, lane: LANE.HEADING, queueCount:Int, timestamp: Date = newDate) extends JunctionEvent
+
+  case class CountVehiclesRequest()
 
   /**
    * message sent from the sensor to the junction that a vehicle has passed the traffic light
    */
-  case class VehiclePassed(id: Int, lane: LANE.HEADING, timestamp: Date = newDate) extends JunctionEvent
+  case class VehiclePassed(id: Int, lane: LANE.HEADING, queueCount:Int, timestamp: Date = newDate) extends JunctionEvent
 
   /**
    * Command to switch a traffic light on a lane to green.

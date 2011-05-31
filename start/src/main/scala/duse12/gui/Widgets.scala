@@ -3,7 +3,7 @@ package duse12.gui
 import java.awt.image.BufferedImage
 import javax.imageio.ImageIO
 import java.io.IOException
-import duse12.{LANE, TrafficLight, LightSwitch}
+import duse12.{LANE, LightSwitch}
 import LANE._
 import swing._
 import javax.swing.Timer
@@ -15,8 +15,8 @@ import scala.math._
 import GUIUtils._
 import collection.mutable.{Buffer, HashMap}
 import akka.actor.ActorRef
-import duse12.messages.VehicleDetected
 import akka.actor.Actor._
+import duse12.messages.{MsgUtils, VehicleQueued, ControlTraffic, VehicleDetected}
 
 //================================
 // GUI widgets
@@ -40,6 +40,28 @@ class NullLayoutPanel extends Panel {
     comp.peer.setBounds(comp.bounds)
     peer.add(comp.peer)
   }
+}
+
+abstract class AbstractTimerButton(x: Int, y: Int, btnText: String = "") extends Button {
+  val timer: Timer
+  private val startText = "Start " + btnText
+  private val stopText = "Stop " + btnText
+
+  var active = false
+  action = Action(startText) {
+    if (!active) {
+      timer.start
+      active = true
+      text = stopText
+    }
+    else {
+      timer.stop
+      active = false
+      text = startText
+    }
+  }
+
+  override def bounds = new Rectangle(x, y, preferredSize.getWidth.toInt, preferredSize.getHeight.toInt)
 }
 
 /**
@@ -67,31 +89,41 @@ class ImagePanel(imagePath: String, comps: Component*) extends NullLayoutPanel {
 }
 
 
+/**
+ * Button to activate junction conrol
+ */
+class JunctionControlButton(x: Int, y: Int, junction: ActorRef, controlInverval: Int = 2000) extends AbstractTimerButton(x, y, "junction control") {
+
+  val timer: Timer = new Timer(controlInverval, (e: ActionEvent) => {
+    junction ! ControlTraffic()
+  })
+}
+
+
 //==============================================
 // Sensor
 //==============================================
 /**
  * Button to active a sensor
- * See TODO in code
  */
-class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Button {
+class SensorButton(lane: HEADING, x: Int, y: Int, val sensor: ActorRef) extends Button {
 
   private val isVertical = LANE.isVertical(lane)
   private val width = if (isVertical) 30 else 150
   private val height = if (isVertical) 150 else 30
-  private var count = 0;
 
   override def bounds = new Rectangle(x, y, width, height)
 
   action = Action(createText("0")) {
-    //TODO generate an id in message
-    sensor ! VehicleDetected(1, false)
-    count += 1
-    refresh
+    (sensor !! VehicleDetected(MsgUtils.genNextId, false)).as[Int] match {
+      case Some(queueCount) => refresh(queueCount.toString)
+      case _ => refresh("?")
+    }
   }
 
-  def refresh = text = (createText("" + count))
-
+   def refresh(count: String) = synchronized {
+      text = (createText(count))
+   }
 
   private def createText(text: String): String = {
     return "<html>" + text + "</html>"
@@ -101,29 +133,11 @@ class SensorButton(lane: HEADING, x: Int, y: Int, sensor: ActorRef) extends Butt
 /**
  * Random sensor activator button
  */
-class SensorRandomizerButton(x: Int, y: Int, sensors: List[ActorRef], incrementInverval: Int = 200) extends Button {
-
-  var active = false
-  val randomIncrementor: Timer = new Timer(incrementInverval, (e: ActionEvent) => {
-    var randomIndex: Int = abs(new Random().nextInt % sensors.length)
-    //TODO generate an id in message
-    sensors(randomIndex) ! VehicleDetected(1, false);
+class SensorRandomizerButton(x: Int, y: Int, sensorButtons: List[SensorButton], incrementInverval: Int = 200) extends AbstractTimerButton(x, y, "random queuing") {
+  val timer: Timer = new Timer(incrementInverval, (e: ActionEvent) => {
+    var randomIndex: Int = abs(new Random().nextInt % sensorButtons.length)
+    sensorButtons(randomIndex).doClick()
   })
-
-  action = Action("Start random queuing") {
-    if (!active) {
-      randomIncrementor.start
-      active = true
-      text = "Stop random queuing"
-    }
-    else {
-      randomIncrementor.stop
-      active = false
-      text = "Start random queuing"
-    }
-  }
-
-  override def bounds = new Rectangle(x, y, preferredSize.getWidth.toInt, preferredSize.getHeight.toInt)
 }
 
 
@@ -137,9 +151,9 @@ class SensorRandomizerButton(x: Int, y: Int, sensors: List[ActorRef], incrementI
  */
 object TrafficLightWidget {
 
-  def apply(heading: HEADING, x: Int, y: Int, sensor: ActorRef) = {
+  def apply(heading: HEADING, x: Int, y: Int, sensorBtn: SensorButton) = {
     val (rows, cols) = defineRowAndCols(heading)
-    new TrafficLightWidget(heading, rows, cols, x, y)(sensor)
+    new TrafficLightWidget(heading, rows, cols, x, y)(sensorBtn)
   }
 
   private def defineRowAndCols(heading: HEADING): (Int, Int) = {
@@ -150,24 +164,23 @@ object TrafficLightWidget {
 
 /**
  * TrafficLightWidget
- * See TODO in code
- *
  */
-class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: Int, y: Int, dequeueInterval: Int = 300)(val sensor: ActorRef) extends GridPanel(rows, cols) with LightSwitch {
+class TrafficLightWidget(val heading: HEADING = NORTH, rows: Int, cols: Int, x: Int, y: Int, dequeueInterval: Int = 300)(val sensorBtn: SensorButton) extends GridPanel(rows, cols) with LightSwitch {
 
   private val green = new TrafficLightLamp(Color.green)
   private val yellow = new TrafficLightLamp(Color.yellow)
   private val red = new TrafficLightLamp(Color.red)
   private val lock: AnyRef = new AnyRef
   /**the dequeueTimer automatically dequeues vehicles when the trafficlight has
-   * switched to green by calling the sensor decrement method */
+   * switched to green */
   private val dequeueTimer = new Timer(dequeueInterval, (e: ActionEvent) => {
-    //TODO keep a list of vehicles queued on the traffic light and only send vehicle passed msgs for those that were queued
-    // if (sensor.current <= 0) {
-     (e.getSource.asInstanceOf[Timer]).stop
-    //} else {
-    //sensor ! VehicleDetected(1, true)
-    //}
+    (sensorBtn.sensor !! VehicleDetected(MsgUtils.genNextId, true)).as[Int] match {
+      case Some(queueCount) => {
+        sensorBtn.refresh(queueCount.toString)
+        if(queueCount <= 0) (e.getSource.asInstanceOf[Timer]).stop
+      }
+      case _ => sensorBtn.refresh("?")
+    }
   })
 
   init(heading)

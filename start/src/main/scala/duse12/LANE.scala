@@ -12,6 +12,6 @@ object LANE extends Enumeration {
   val EAST = Value(3,"EAST")
   val WEST = Value(1,"WEST")
   def isVertical(v:LANE.HEADING) = (v == EAST || v == WEST)
-  def isHorizontal(v:LANE.HEADING) = (v == NORTH )
+  def isHorizontal(v:LANE.HEADING) = (v == NORTH)
   def nextClockwise(v:LANE.HEADING) = LANE((v.id % 3) +1)
 }
