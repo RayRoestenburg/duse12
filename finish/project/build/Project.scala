@@ -14,7 +14,7 @@ with Eclipsify with IdeaProject with AkkaKernelProject with ScalariformPlugin {
   // for ui
   val swing = "org.scala-lang" % "scala-swing" % this.buildScalaVersion % "compile"
 
-  val scalatest = "org.scalatest" % "scalatest" % "1.6.1.RC1" % "test->default"
+  val scalatest = "org.scalatest" % "scalatest_2.9.0" % "1.6.1.RC1" % "test->default"
   val junit = "junit" % "junit" % "3.8.1" % "test->default"
 
   override def formatBeforeCompiling = false
