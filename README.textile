@@ -1,5 +1,8 @@
 h1. DUSE XII workshop
 
+This workshop has been donated to scala-labs: https://github.com/scala-labs/scala-labs
+You can find it in the playground/akka folder. It will be kept up to date there.
+
 Akka Workshop project for the DUSE XII meetup.
 
 The start folder contains a starting point sbt project for the workshop.
